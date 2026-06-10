@@ -1,0 +1,75 @@
+{% extends 'store/base.html' %}
+
+{% block title %}Админ-панель{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Админ-панель</h1>
+    <div>
+        <a href="{% url 'admin_reminders' %}" class="btn btn-outline-warning">Журнал напоминаний</a>
+        <a href="{% url 'admin_book_create' %}" class="btn btn-success">+ Добавить книгу</a>
+    </div>
+</div>
+
+{% if overdue_rentals %}
+<div class="alert alert-danger">
+    <strong>Просроченные аренды:</strong> {{ overdue_rentals.count }}
+</div>
+{% endif %}
+
+<div class="table-responsive">
+    <table class="table table-bordered table-hover align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th>Название</th>
+                <th>Автор</th>
+                <th>Категория</th>
+                <th>Цена</th>
+                <th>Аренда (2н/1м/3м)</th>
+                <th>Статус</th>
+                <th>В каталоге</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for book in books %}
+            <tr>
+                <td>{{ book.title }}</td>
+                <td>{{ book.author }}</td>
+                <td>{{ book.category.name }}</td>
+                <td>
+                    <form method="post" action="{% url 'admin_book_quick_edit' book.pk %}" class="d-flex gap-1">
+                        {% csrf_token %}
+                        <input type="number" step="0.01" name="price" value="{{ book.price }}" class="form-control form-control-sm" style="width:90px">
+                </td>
+                <td>
+                        <input type="number" step="0.01" name="rent_price_2w" value="{{ book.rent_price_2w }}" class="form-control form-control-sm d-inline" style="width:70px">
+                        <input type="number" step="0.01" name="rent_price_1m" value="{{ book.rent_price_1m }}" class="form-control form-control-sm d-inline" style="width:70px">
+                        <input type="number" step="0.01" name="rent_price_3m" value="{{ book.rent_price_3m }}" class="form-control form-control-sm d-inline" style="width:70px">
+                </td>
+                <td>
+                        <select name="status" class="form-select form-select-sm">
+                            {% for val, label in status_choices %}
+                            <option value="{{ val }}" {% if book.status == val %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                </td>
+                <td class="text-center">
+                        <input type="checkbox" name="is_active" {% if book.is_active %}checked{% endif %} class="form-check-input">
+                </td>
+                <td>
+                        <button type="submit" class="btn btn-sm btn-primary">Сохранить</button>
+                    </form>
+                    <a href="{% url 'admin_book_edit' book.pk %}" class="btn btn-sm btn-outline-secondary">Изменить</a>
+                    <form method="post" action="{% url 'admin_book_delete' book.pk %}" class="d-inline"
+                          onsubmit="return confirm('Удалить книгу?')">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Удалить</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

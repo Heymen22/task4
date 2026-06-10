@@ -1,0 +1,76 @@
+{% extends 'store/base.html' %}
+
+{% block title %}Каталог — Книжный магазин{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Каталог книг</h1>
+    {% if user.is_authenticated and unread_count %}
+    <span class="badge bg-danger">{{ unread_count }} новых уведомлений</span>
+    {% endif %}
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <form method="get" class="d-flex gap-2 flex-wrap">
+            <select name="category" class="form-select" style="max-width:200px" onchange="this.form.submit()">
+                <option value="">Все категории</option>
+                {% for cat in categories %}
+                <option value="{{ cat.id }}" {% if current_category == cat.id|stringformat:"s" %}selected{% endif %}>
+                    {{ cat.name }}
+                </option>
+                {% endfor %}
+            </select>
+            <input type="hidden" name="sort" value="{{ current_sort }}">
+            <input type="hidden" name="order" value="{{ current_order }}">
+        </form>
+    </div>
+    <div class="col-md-6">
+        <div class="btn-group float-md-end" role="group">
+            <a href="?sort=category&order={{ current_order }}{% if current_category %}&category={{ current_category }}{% endif %}"
+               class="btn btn-outline-secondary {% if current_sort == 'category' %}active{% endif %}">Категория</a>
+            <a href="?sort=author&order={{ current_order }}{% if current_category %}&category={{ current_category }}{% endif %}"
+               class="btn btn-outline-secondary {% if current_sort == 'author' %}active{% endif %}">Автор</a>
+            <a href="?sort=year&order={{ current_order }}{% if current_category %}&category={{ current_category }}{% endif %}"
+               class="btn btn-outline-secondary {% if current_sort == 'year' %}active{% endif %}">Год</a>
+            <a href="?sort={{ current_sort }}&order={% if current_order == 'asc' %}desc{% else %}asc{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}"
+               class="btn btn-outline-secondary">
+                {% if current_order == 'asc' %}↑{% else %}↓{% endif %}
+            </a>
+        </div>
+    </div>
+</div>
+
+{% if books %}
+<div class="row g-4">
+    {% for book in books %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 book-card">
+            {% if book.cover_url %}
+            <img src="{{ book.cover_url }}" class="card-img-top book-cover" alt="{{ book.title }}">
+            {% else %}
+            <div class="card-img-top book-cover-placeholder d-flex align-items-center justify-content-center">
+                <span class="display-4">📖</span>
+            </div>
+            {% endif %}
+            <div class="card-body d-flex flex-column">
+                <span class="badge bg-secondary mb-2 align-self-start">{{ book.category.name }}</span>
+                <h5 class="card-title">{{ book.title }}</h5>
+                <p class="card-text text-muted">{{ book.author }}, {{ book.year }}</p>
+                <p class="card-text flex-grow-1">{{ book.description|truncatewords:20 }}</p>
+                <div class="d-flex justify-content-between align-items-center mt-auto">
+                    <strong>{{ book.price }} ₽</strong>
+                    <span class="badge {% if book.status == 'available' %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                        {{ book.get_status_display }}
+                    </span>
+                </div>
+                <a href="{% url 'book_detail' book.pk %}" class="btn btn-primary mt-3">Подробнее</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info">Книги не найдены.</div>
+{% endif %}
+{% endblock %}
